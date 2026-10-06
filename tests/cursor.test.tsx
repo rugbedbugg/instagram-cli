@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- xo cannot resolve ink-testing-library types in tests */
 
 import chalk from 'chalk';
 import React from 'react';
@@ -9,6 +9,7 @@ import InputBox, {
 } from '../source/ui/components/input-box.js';
 import {MouseProvider} from '../source/ui/context/mouse-context.js';
 import {ESC} from '../source/utils/mouse.js';
+import {waitForFrame} from './_wait-for-frame.js';
 
 // Force chalk to emit ANSI color codes so the cursor highlight is visible in
 // the captured frame output. This must be set before any rendering occurs.
@@ -179,14 +180,15 @@ test.serial(
 		);
 
 		stdin.write('hello');
-		await delay(100);
+		await waitForFrame(lastFrame, frame => frame.includes('hello'));
 
 		// Click on 'l' (index 2, visual col 2)
 		stdin.write(clickAt(0, 2));
-		await delay(100);
 
-		const frame = lastFrame()!;
 		// Cursor is rendered as chalk.inverse(char) = ESC[7m{char}ESC[27m
+		const frame = await waitForFrame(lastFrame, frame =>
+			frame.includes('he\u001B[7ml\u001B[27mlo'),
+		);
 		t.true(
 			frame.includes('he\u001B[7ml\u001B[27mlo'),
 			`Expected cursor on "he[l]lo" but got: ${JSON.stringify(frame)}`,
@@ -205,12 +207,13 @@ test.serial(
 		);
 
 		stdin.write('hello');
-		await delay(100);
+		await waitForFrame(lastFrame, frame => frame.includes('hello'));
 
 		stdin.write(clickAt(0, 0));
-		await delay(100);
 
-		const frame = lastFrame()!;
+		const frame = await waitForFrame(lastFrame, frame =>
+			frame.includes('\u001B[7mh\u001B[27m'),
+		);
 		t.true(
 			frame.includes('\u001B[7mh\u001B[27m'),
 			`Expected cursor on "h" but got: ${JSON.stringify(frame)}`,
@@ -229,13 +232,14 @@ test.serial(
 		);
 
 		stdin.write('\u{1F600}abc');
-		await delay(100);
+		await waitForFrame(lastFrame, frame => frame.includes('\u{1F600}abc'));
 
 		// Emoji spans visual cols 0-1. Clicking col 0 (left cell) → cursor at emoji (index 0).
 		stdin.write(clickAt(0, 0));
-		await delay(100);
 
-		const frame = lastFrame()!;
+		const frame = await waitForFrame(lastFrame, frame =>
+			frame.includes(`\u001B[7m\u{1F600}\u001B[27m`),
+		);
 		t.true(
 			frame.includes(`\u001B[7m\u{1F600}\u001B[27m`),
 			`Expected cursor on emoji but got: ${JSON.stringify(frame)}`,
@@ -254,14 +258,15 @@ test.serial(
 		);
 
 		stdin.write('\u{1F600}abc');
-		await delay(100);
+		await waitForFrame(lastFrame, frame => frame.includes('\u{1F600}abc'));
 
 		// Emoji spans visual cols 0-1. Clicking col 1 (right cell) still places
 		// the cursor at the emoji (index 0) — not after it.
 		stdin.write(clickAt(0, 1));
-		await delay(100);
 
-		const frame = lastFrame()!;
+		const frame = await waitForFrame(lastFrame, frame =>
+			frame.includes(`\u001B[7m\u{1F600}\u001B[27m`),
+		);
 		t.true(
 			frame.includes(`\u001B[7m\u{1F600}\u001B[27m`),
 			`Expected cursor on emoji but got: ${JSON.stringify(frame)}`,
@@ -280,13 +285,14 @@ test.serial(
 		);
 
 		stdin.write('\u{1F600}abc');
-		await delay(100);
+		await waitForFrame(lastFrame, frame => frame.includes('\u{1F600}abc'));
 
 		// 'a' starts at visual col 2 (emoji takes cols 0-1)
 		stdin.write(clickAt(0, 2));
-		await delay(100);
 
-		const frame = lastFrame()!;
+		const frame = await waitForFrame(lastFrame, frame =>
+			frame.includes('\u001B[7ma\u001B[27m'),
+		);
 		t.true(
 			frame.includes('\u001B[7ma\u001B[27m'),
 			`Expected cursor on "a" but got: ${JSON.stringify(frame)}`,
@@ -305,7 +311,7 @@ test.serial(
 		);
 
 		stdin.write('hello');
-		await delay(100);
+		await waitForFrame(lastFrame, frame => frame.includes('hello'));
 
 		// After typing, cursor should be at end of "hello"
 		const frameBefore = lastFrame()!;
@@ -331,26 +337,28 @@ test.serial(
 		);
 
 		stdin.write('hello');
-		await delay(100);
+		await waitForFrame(lastFrame, frame => frame.includes('hello'));
 		stdin.write('\n'); // '\r' submitted the message, so we use '\n' to insert a newline without submitting
 		await delay(100);
 		stdin.write('world');
-		await delay(100);
+		await waitForFrame(lastFrame, frame => frame.includes('world'));
 
 		// Click on 'l' (index 2, visual col 2)
 		stdin.write(clickAt(0, 2));
-		await delay(100);
 
-		const frame = lastFrame()!;
 		// Cursor is rendered as chalk.inverse(char) = ESC[7m{char}ESC[27m
+		const frame = await waitForFrame(lastFrame, frame =>
+			frame.includes('he\u001B[7ml\u001B[27mlo'),
+		);
 		t.true(
 			frame.includes('he\u001B[7ml\u001B[27mlo'),
 			`Expected cursor on "he[l]lo" but got: ${JSON.stringify(frame)}`,
 		);
 
 		stdin.write(clickAt(1, 2)); // Click on 'r' in "world"
-		await delay(100);
-		const frameAfterSecondClick = lastFrame()!;
+		const frameAfterSecondClick = await waitForFrame(lastFrame, frame =>
+			frame.includes('wo\u001B[7mr\u001B[27mld'),
+		);
 
 		t.true(
 			frameAfterSecondClick.includes('wo\u001B[7mr\u001B[27mld'),
