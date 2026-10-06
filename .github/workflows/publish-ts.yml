@@ -1,3 +1,7 @@
+# UPSTREAM-ONLY: publishes @i7m/instagram-cli to npm and updates supreme-gg-gg/homebrew-tap.
+# Kept for reference in the maintenance fork. The repository guard below makes the job skip
+# in any other repository, so tags or manual runs in the fork cannot publish to upstream
+# infrastructure. See docs/maintenance-fork.md before introducing a downstream release pipeline.
 # This workflow will publish the TypeScript package to NPM when a tag matching ts-v*.*.* is pushed
 
 name: Build and Publish TypeScript Package
@@ -19,10 +23,11 @@ permissions:
 jobs:
   npm-publish:
     runs-on: ubuntu-latest
-    # Only run if tag matches ts-v*.*.* pattern
+    # Only run in the upstream repository, and only if tag matches ts-v*.*.* pattern
     if: >
+      github.repository == 'supreme-gg-gg/instagram-cli' && (
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/ts-v')) ||
-      (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'ts-v'))
+      (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'ts-v')))
 
     environment:
       name: npm-release
