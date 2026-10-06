@@ -10,7 +10,8 @@ This documentation provides context for AI coding tools like VSCode, Cursor, Gem
 
 ## Build & Test Commands
 
-- Install: `npm ci`
+- Install: `npm ci` (does not touch Git config)
+- Enable pre-commit hooks (optional, once per clone): `npm run hooks:install`
 - Development: `npm run dev`
 - Build: `npm run build`
 - Run CLI: `npm run start -- <command>`

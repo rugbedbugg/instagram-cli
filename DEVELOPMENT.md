@@ -6,7 +6,7 @@ FAQ: Why are there two different codebases for TypeScript and Python? This has t
 
 ### Getting Started
 
-If you do not have Node.js installed, you can download and install it from the [official website](https://nodejs.org/). We recommend using Node.js version 20 or above. We recommend using `nvm` to manage your Node.js versions, see [nvm-sh/nvm](https://github.com/nvm-sh/nvm).
+If you do not have Node.js installed, you can download and install it from the [official website](https://nodejs.org/). Node.js 22 or above is required (see `engines` in `package.json`). We recommend using a version manager such as `nvm` ([nvm-sh/nvm](https://github.com/nvm-sh/nvm)) or `mise`.
 
 To get started, you need to install the dependencies:
 
@@ -14,7 +14,15 @@ To get started, you need to install the dependencies:
 npm ci
 ```
 
-We are using `lint-staged` and `husky` for pre-commit hooks to ensure code quality for TypeScript. They are setup automatically when you run `npm ci`. They will run `prettier` and `xo` on staged files before each commit.
+`npm ci` only installs dependencies and applies the `patches/` via `patch-package`; it does not modify your Git configuration.
+
+We are using `lint-staged` and `husky` for pre-commit hooks to ensure code quality for TypeScript. They are opt-in: run the following once per clone to enable them (this sets `core.hooksPath` in the repository's `.git/config`). They will run `prettier` and `xo` on staged files before each commit.
+
+```bash
+npm run hooks:install
+```
+
+To disable them again, run `git config --unset core.hooksPath`.
 
 If linter and formatter is not run automatically, you can run it manually with:
 

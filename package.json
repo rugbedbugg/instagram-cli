@@ -33,7 +33,7 @@
 		"build": "tsc --noEmit && node esbuild.config.mjs --production",
 		"clean": "rm -rf dist",
 		"lint-check": "prettier --check . && xo --ignore esbuild.config.mjs",
-		"prepare": "husky",
+		"hooks:install": "husky",
 		"dev": "node esbuild.config.mjs",
 		"dev:watch": "node esbuild.config.mjs --watch",
 		"start": "node dist/cli.js",
