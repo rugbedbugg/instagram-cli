@@ -145,26 +145,20 @@ This feature provides in-line suggestions for chat commands, triggered by the `:
 
 ## Message Preprocessing
 
-Before a message is sent to a thread, it will pass through a preprocessing step to handle special syntax for file embedding and emojis. This logic will be encapsulated in a `preprocessMessage` function that is called from the `InputBox`'s `onSend` handler.
+Before a message is sent to a thread, `planOutgoingMessage` in `source/utils/outgoing-message.ts` parses it for attachment tokens and emoji shortcodes. Every local file goes through the policy in `source/utils/local-file-policy.ts`; see [local-file-safety.md](./local-file-safety.md).
 
-### Preprocessing Flow
+### 1. File Attachments (`#<path>`)
 
-The `preprocessMessage` function takes the raw text in input box, checks if it contains any special syntax, and processes it accordingly, either modifying the text or triggering additional actions (like file uploads), then returns the final text to be sent.
+- **Syntax**: `#path/to/file.ext`, or `#"path with spaces.txt"` / `#'path with spaces.txt'`. A token must start a word and look like a path (contain `/`, `\` or `.`, or start with `~`); `#travel` and URL fragments such as `https://x.com/#/route` are ordinary text. Write `\#` to send a literal `#`.
+- **Explicit confirmation**: a message with attachments is not sent immediately. The chat shows each file's base name and size and waits for `y` (send) or `n`/`Esc` (cancel). Files are not read until the user confirms.
+- **Images** are uploaded with `client.sendPhoto()` before the text, and their tokens are removed from the text.
+- **Text files** (UTF-8, at most 16 KiB) are appended to the message as `--- <base name> ---` blocks, and their tokens are removed. The local path is never part of the sent text.
+- **Videos** must be sent with `:upload`.
+- **Failure is all-or-nothing**: if any attachment is missing, protected, too large, of an unsupported type, changed after confirmation, or contains a private key or access token, nothing is sent (neither files nor text) and a local error explains why, without the absolute path.
+- `:reply` does not accept attachments.
 
-### 1. File Path Handling (`#<path>`)
-
-- **Syntax**: `#path/to/your/file.ext`
-- **Text Files** (e.g., `.txt`, `.md`, `.js`, `.ts`, `.json`):
-  - The content of the specified file will be read from the filesystem.
-  - The `#<path>` string in the message will load the file's content and append it to the end of message text, preserving the `#<path>` string's position.
-- **Image Files** (e.g., `.png`, `.jpg`, `.jpeg`, `.gif`):
-  - For each image path found, the `client.sendPhoto()` method will be called for the current thread.
-  - The `#<path>` string will be removed from the message text.
-  - If the message contains only image paths, no text message will be sent.
-  - If the message contains text and image paths, the images will be uploaded, and the remaining text will be sent as a separate message.
-
-> NOTE: For those interested, this design follows directly from Gemini CLI's UX, but we modified where text files are added. For AI, it doesn't matter if you just replace `#<path>` with the file content inline. But for human users, we're more used to seeing the file content as an "appendix" and referencing the file content with the file path. This is an intentional UX choice.
-> since instagram uses `@' for mentions we are using `#` for triggering.
+> NOTE: Text files are added as an "appendix" rather than inline, an intentional UX choice adapted from Gemini CLI.
+> Since Instagram uses `@` for mentions, `#` triggers file paths.
 
 ### 2. Emoji Handling (`:emoji_name:`)
 

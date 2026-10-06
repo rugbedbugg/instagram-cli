@@ -1,3 +1,4 @@
+import {Buffer} from 'node:buffer';
 import {join, extname} from 'node:path';
 import fs from 'node:fs';
 import {EventEmitter} from 'node:events';
@@ -43,6 +44,11 @@ import {
 	getBestMediaUrl,
 } from './utils/message-parser.js';
 import {createContextualLogger} from './utils/logger.js';
+import {
+	isPreparedMedia,
+	type MediaKind,
+	type PreparedMedia,
+} from './utils/local-file-policy.js';
 
 export type LoginResult = {
 	success: boolean;
@@ -867,13 +873,20 @@ export class InstagramClient extends EventEmitter {
 		}
 	}
 
-	public async sendPhoto(threadId: string, filePath: string): Promise<string> {
+	/**
+	 * Uploads a photo. Only media prepared by the local file policy
+	 * (readMediaForUpload / readAttachment) is accepted, never a raw path.
+	 */
+	public async sendPhoto(
+		threadId: string,
+		media: PreparedMedia,
+	): Promise<string> {
+		const file = this.toUploadBuffer(media, 'photo');
 		try {
-			const fileBuffer = await fs.promises.readFile(filePath);
 			const result = await this.ig.entity
 				.directThread(threadId)
 				.broadcastPhoto({
-					file: fileBuffer,
+					file,
 				});
 			return extractItemId(result);
 		} catch (error) {
@@ -882,13 +895,17 @@ export class InstagramClient extends EventEmitter {
 		}
 	}
 
-	public async sendVideo(threadId: string, filePath: string): Promise<string> {
+	/** Uploads a video prepared by the local file policy. */
+	public async sendVideo(
+		threadId: string,
+		media: PreparedMedia,
+	): Promise<string> {
+		const video = this.toUploadBuffer(media, 'video');
 		try {
-			const fileBuffer = await fs.promises.readFile(filePath);
 			const result = await this.ig.entity
 				.directThread(threadId)
 				.broadcastVideo({
-					video: fileBuffer,
+					video,
 				});
 			return extractItemId(result);
 		} catch (error) {
@@ -1086,6 +1103,21 @@ export class InstagramClient extends EventEmitter {
 				error,
 			);
 		}
+	}
+
+	private toUploadBuffer(media: PreparedMedia, kind: MediaKind) {
+		// Runtime guard for callers that bypass the types (casts, plain JS).
+		if (!isPreparedMedia(media) || media.kind !== kind) {
+			throw new TypeError(
+				`send${kind === 'photo' ? 'Photo' : 'Video'} requires ${kind} media prepared by the local file policy`,
+			);
+		}
+
+		return Buffer.from(
+			media.bytes.buffer,
+			media.bytes.byteOffset,
+			media.bytes.byteLength,
+		);
 	}
 
 	private setRealtimeStatus(status: RealtimeStatus) {

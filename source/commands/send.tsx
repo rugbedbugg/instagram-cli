@@ -1,4 +1,3 @@
-import path from 'node:path';
 import React, {useCallback} from 'react';
 import zod from 'zod';
 import {argument, option} from 'pastel';
@@ -10,27 +9,9 @@ import {
 	resolveThread,
 } from '../utils/one-turn.js';
 import {type InstagramClient} from '../client.js';
+import {uploadLocalMedia} from '../utils/outgoing-message.js';
 
 export const description = 'Send a text message, photo, or video to a user';
-
-const PHOTO_EXTENSIONS = new Set([
-	'.jpg',
-	'.jpeg',
-	'.png',
-	'.gif',
-	'.webp',
-	'.heic',
-]);
-const VIDEO_EXTENSIONS = new Set(['.mp4', '.mov', '.avi', '.webm', '.mkv']);
-
-function detectMediaType(filePath: string): 'photo' | 'video' {
-	const ext = path.extname(filePath).toLowerCase();
-	if (PHOTO_EXTENSIONS.has(ext)) return 'photo';
-	if (VIDEO_EXTENSIONS.has(ext)) return 'video';
-	throw new Error(
-		`Cannot detect media type for extension "${ext}". Use --type photo|video to override.`,
-	);
-}
 
 export const args = zod.tuple([
 	zod.string().describe(
@@ -83,7 +64,7 @@ export const options = zod.object({
 		.describe(
 			option({
 				description:
-					'Media type override (photo|video); auto-detected if omitted',
+					'Expected media type (photo|video); must match the file content. Auto-detected if omitted',
 			}),
 		),
 });
@@ -102,11 +83,14 @@ export default function Send({args: commandArgs, options}: Properties) {
 			const {threadId} = await resolveThread(client, recipient);
 
 			if (options.file) {
-				const mediaType = options.type ?? detectMediaType(options.file);
-				const messageId =
-					mediaType === 'photo'
-						? await client.sendPhoto(threadId, options.file)
-						: await client.sendVideo(threadId, options.file);
+				// The --file flag is the explicit intent; the local file policy still
+				// refuses sensitive files and anything that is not really media.
+				const {kind: mediaType, messageId} = await uploadLocalMedia(
+					client,
+					threadId,
+					options.file,
+					options.type ?? 'auto',
+				);
 
 				if (isJson) {
 					outputJson(

@@ -130,7 +130,7 @@ Inside the chat interface and after selecting a thread, you can navigate all int
 ```
 
 > [!TIP]
-> You can quickly include text files or images in a message by using `#` followed by the file path. For example, `#path/to/file.txt` or `#path/to/image.png`.
+> You can attach text files or images to a message by using `#` followed by the file path. For example, `#path/to/file.txt` or `#path/to/image.png`. The CLI asks you to confirm (`y`/`n`) before any file is read or sent, and refuses credentials and other protected files. Write `\#` for a literal `#`.
 > Use `tab` and `enter` to autocomplete file paths. You can include emojis in messages with `:emoji_name:` e.g. `:thumbsup:` = 👍 (with fuzzy matching).
 
 Instagram CLI supports mouse interactions as well, so you can click on messages to select them, scroll through the chat, and click to reposition the cursor when typing messages. We're gradually rolling out more mouse support in our TUI!

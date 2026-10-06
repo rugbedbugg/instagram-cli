@@ -18,7 +18,13 @@ import ScrollView, {type ScrollViewRef} from '../components/scroll-view.js';
 import {useClient} from '../context/client-context.js';
 import {parseAndDispatchChatCommand} from '../../utils/chat-commands.js';
 import FullScreen from '../components/full-screen.js';
-import {preprocessMessage} from '../../utils/preprocess.js';
+import {
+	formatAttachmentSize,
+	planOutgoingMessage,
+	sendPlannedMessage,
+	type ReadyOutgoingMessagePlan,
+} from '../../utils/outgoing-message.js';
+import {LocalFileError} from '../../utils/local-file-policy.js';
 import SearchInput from '../components/search-input.js';
 import SinglePostView from '../components/single-post-view.js';
 import {useImageProtocol} from '../hooks/use-image-protocol.js';
@@ -65,6 +71,11 @@ export default function ChatView({
 	const [systemMessage, setSystemMessage] = useState<string | undefined>(
 		undefined,
 	);
+	// A message with #path attachments waits here for explicit y/n confirmation.
+	// Nothing is read from the files or sent until the user confirms.
+	const [pendingSend, setPendingSend] = useState<
+		{plan: ReadyOutgoingMessagePlan; threadId: string} | undefined
+	>(undefined);
 
 	const [searchMode, setSearchMode] = useState<SearchMode>(initialSearchMode);
 	const [searchQuery, setSearchQuery] = useState(initialSearchQuery ?? '');
@@ -559,6 +570,17 @@ export default function ChatView({
 	}, [client, realtimeStatus]);
 
 	useInput((input, key) => {
+		// Attachment confirmation takes priority over every other key binding
+		if (pendingSend) {
+			if (input === 'y' || input === 'Y') {
+				void confirmPendingSend();
+			} else if (input === 'n' || input === 'N' || key.escape) {
+				cancelPendingSend();
+			}
+
+			return;
+		}
+
 		if (viewingPost) {
 			return;
 		}
@@ -710,36 +732,73 @@ export default function ChatView({
 		try {
 			// Use processedText if available (e.g., when '::' was stripped), otherwise use original text
 			const textToProcess = processedText ?? text;
-			const finalText = await preprocessMessage(textToProcess, {
-				client,
-				threadId: chatState.currentThread.id,
-			});
+			const plan = await planOutgoingMessage(textToProcess);
 
-			if (finalText) {
-				await client.sendMessage(chatState.currentThread.id, finalText);
+			if (plan.status === 'rejected') {
+				// Fail closed: neither the files nor the message text are sent.
+				setSystemMessage(
+					String.raw`Not sent: ${plan.errors.join(' ')} (Use \# to send a literal #.)`,
+				);
+				return;
+			}
 
-				// Scroll to bottom after sending a message
-				// Timeout to ensure message is rendered before scrolling
-				const timeout = setTimeout(() => {
-					if (scrollViewRef.current) {
-						scrollViewRef.current.scrollToEnd(false);
-					}
-				}, 1000);
+			if (plan.attachments.length > 0) {
+				setPendingSend({plan, threadId: chatState.currentThread.id});
+				return;
+			}
 
-				// Clear recipient read status on new message sent
-				setChatState(previous => ({...previous, recipientAlreadyRead: false}));
-
-				return () => {
-					clearTimeout(timeout);
-				};
+			if (plan.text) {
+				await client.sendMessage(chatState.currentThread.id, plan.text);
+				handleMessageSent();
 			}
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : 'Failed to send message';
 			setSystemMessage(errorMessage);
 		}
+	};
 
-		return;
+	const handleMessageSent = () => {
+		// Scroll to bottom after sending a message
+		// Timeout to ensure message is rendered before scrolling
+		setTimeout(() => {
+			if (scrollViewRef.current) {
+				scrollViewRef.current.scrollToEnd(false);
+			}
+		}, 1000);
+
+		// Clear recipient read status on new message sent
+		setChatState(previous => ({...previous, recipientAlreadyRead: false}));
+	};
+
+	const confirmPendingSend = async () => {
+		if (!pendingSend || !client) return;
+
+		const {plan, threadId} = pendingSend;
+		setPendingSend(undefined);
+		try {
+			const {photosSent} = await sendPlannedMessage(plan, client, threadId);
+			setSystemMessage(
+				`Sent with ${plan.attachments.length} attachment(s)${
+					photosSent > 0 ? ` (${photosSent} photo upload(s))` : ''
+				}.`,
+			);
+			handleMessageSent();
+		} catch (error) {
+			if (error instanceof LocalFileError) {
+				setSystemMessage(`Not sent: ${error.message}`);
+				return;
+			}
+
+			setSystemMessage(
+				error instanceof Error ? error.message : 'Failed to send message',
+			);
+		}
+	};
+
+	const cancelPendingSend = () => {
+		setPendingSend(undefined);
+		setSystemMessage('Attachments cancelled. Nothing was sent.');
 	};
 
 	const handleOnScrollToBottom = () => {
@@ -880,8 +939,30 @@ export default function ChatView({
 							<Text color="yellow">{systemMessage}</Text>
 						</Box>
 					)}
+					{pendingSend && (
+						<Box
+							flexDirection="column"
+							borderStyle="round"
+							borderColor="yellow"
+							paddingX={1}
+						>
+							<Text bold color="yellow">
+								Send {pendingSend.plan.attachments.length} local file(s) with
+								this message?
+							</Text>
+							{pendingSend.plan.attachments.map((attachment, index) => (
+								<Text key={index}>
+									📎 {attachment.displayName} (
+									{formatAttachmentSize(attachment.size)})
+								</Text>
+							))}
+							<Text dimColor>
+								y: send · n/Esc: cancel. Files are not read until you confirm.
+							</Text>
+						</Box>
+					)}
 					<InputBox
-						isDisabled={chatState.isSelectionMode}
+						isDisabled={chatState.isSelectionMode || Boolean(pendingSend)}
 						onSend={handleSendMessage}
 					/>
 				</Box>
@@ -897,6 +978,10 @@ export default function ChatView({
 
 		if (currentView === 'threads') {
 			return 'j/k: navigate, Enter: select, /: search by title, @: search by username, Esc: quit';
+		}
+
+		if (pendingSend) {
+			return 'y: send with attachments, n/Esc: cancel';
 		}
 
 		if (chatState.isSelectionMode) {

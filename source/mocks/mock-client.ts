@@ -15,6 +15,7 @@ import type {
 	ListMediaItem,
 	ProfileInfo,
 } from '../types/instagram.js';
+import type {PreparedMedia} from '../utils/local-file-policy.js';
 import {createContextualLogger} from '../utils/logger.js';
 import {
 	mockMessages,
@@ -192,7 +193,7 @@ class MockClient extends EventEmitter {
 		this.emit('message', newMessage);
 	}
 
-	async sendPhoto(threadId: string, filePath: string): Promise<void> {
+	async sendPhoto(threadId: string, media: PreparedMedia): Promise<void> {
 		// Simulate sending a photo
 		const newMessage: Message = {
 			id: `photo_${Date.now()}`,
@@ -208,7 +209,7 @@ class MockClient extends EventEmitter {
 				image_versions2: {
 					candidates: [
 						{
-							url: filePath,
+							url: media.displayName,
 							width: 1080,
 							height: 1080,
 						},
@@ -226,7 +227,7 @@ class MockClient extends EventEmitter {
 		this.emit('message', newMessage);
 	}
 
-	async sendVideo(threadId: string, filePath: string): Promise<void> {
+	async sendVideo(threadId: string, media: PreparedMedia): Promise<void> {
 		// Simulate sending a video
 		const newMessage: Message = {
 			id: `video_${Date.now()}`,
@@ -241,7 +242,7 @@ class MockClient extends EventEmitter {
 				media_type: 2, // Video
 				video_versions: [
 					{
-						url: filePath,
+						url: media.displayName,
 						width: 1080,
 						height: 1920,
 					},

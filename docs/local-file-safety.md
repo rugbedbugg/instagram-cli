@@ -61,3 +61,31 @@ Limits are inclusive (a file exactly at the limit is accepted), enforced at appr
 ## Logging
 
 Rejections are logged as `Local file rejected: <code> (<category>)` only: no path and no file name. Approvals log the purpose and byte count. User-facing errors include only the base name the user typed, never the resolved absolute path.
+
+## Entry points
+
+| Entry point                                    | Kind                                                | Policy path                                                                                            | Confirmation                                         |
+| ---------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `#path` in the chat composer (`chat-view.tsx`) | implicit preprocessing → text embed or photo upload | `planOutgoingMessage` → `approveLocalFile('attachment')`, then `sendPlannedMessage` → `readAttachment` | Yes: `y`/`n` prompt; nothing read before `y`         |
+| `:upload <path>`                               | explicit command → photo/video upload               | `uploadLocalMedia` → `approveLocalFile('media-upload')` → `readMediaForUpload`                         | No: the command is the explicit intent               |
+| `send <thread> --file <path> [--type]`         | explicit one-turn command → photo/video upload      | `uploadLocalMedia`; `--type` must match the content                                                    | No: non-interactive; the flag is the explicit intent |
+| `:reply <text>`                                | text only                                           | attachment tokens refused without filesystem access                                                    | —                                                    |
+| `InstagramClient.sendPhoto` / `sendVideo`      | upload sink                                         | accepts only `PreparedMedia` (runtime-checked)                                                         | —                                                    |
+| `#` path autocomplete (`autocomplete.ts`)      | local directory listing for suggestions             | not covered: names are shown locally and never sent                                                    | —                                                    |
+| `:download`, `read --download`                 | write local files from Instagram media              | out of scope (writes, not reads)                                                                       | —                                                    |
+
+## Explicit intent and failure behavior
+
+Typing `#path` is not treated as sufficient intent, because the same text can arrive by accident or by pasting. The chat therefore asks for confirmation, and only then reads and transmits. `:upload` and `send --file` are explicit file operations, so they skip the prompt but still pass the full policy, and refuse anything that is not really an image or video.
+
+For `#path` messages, every attachment is approved before the prompt and every file is read and validated after confirmation, before anything is transmitted. Any failure rejects the whole message: no file content, no text and no path is sent. For example, `hello #/home/user/.ssh/id_ed25519` produces a local `Not sent: … protected location (SSH keys and config) …` error and sends nothing.
+
+The draft is cleared when a message is submitted, so after a rejection it has to be retyped; restoring the draft is a possible UX follow-up.
+
+## Adding new entry points (e.g. drag-and-drop)
+
+New ways to pick a file must produce an attachment request, not read files themselves:
+
+1. Convert the input into the same explicit token, e.g. a dropped path becomes `#"<path>"` in the composer, or call `approveLocalFile(path, 'attachment')` directly.
+2. Let `planOutgoingMessage` approve it, show the same confirmation prompt, and send with `sendPlannedMessage`.
+3. Never fall back to sending the raw path text when approval fails.

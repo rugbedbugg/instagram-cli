@@ -80,7 +80,7 @@ instagram-cli send <thread> --file <path> [--type photo|video] [--output json]
 ```
 
 `<thread>` is a thread ID, username, or title. `--text` and `--file` are mutually exclusive.
-Media type is auto-detected from extension; use `--type` to override.
+Media type is detected from the file content; `--type` must match it. Credentials and other protected files (see `docs/local-file-safety.md`) are refused.
 
 ```bash
 instagram-cli send johndoe --text "Hey, are you free tonight?"

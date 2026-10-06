@@ -4,7 +4,12 @@ import type {InstagramClient} from '../client.js';
 import type {ChatState, Post} from '../types/instagram.js';
 import type {ScrollViewRef} from '../ui/components/scroll-view.js';
 import {ConfigManager} from '../config.js';
-import {preprocessMessage} from './preprocess.js';
+import {LocalFileError} from './local-file-policy.js';
+import {
+	applyEmojiShortcodes,
+	parseOutgoingMessage,
+	uploadLocalMedia,
+} from './outgoing-message.js';
 import {createContextualLogger} from './logger.js';
 import {getEmojiByName} from './emoji.js';
 
@@ -68,11 +73,14 @@ export const chatCommands: Record<string, ChatCommand> = {
 				return;
 			}
 
-			// Preprocess the reply text to handle emojis and file references
-			const processedText = await preprocessMessage(text, {
-				client,
-				threadId: chatState.currentThread.id,
-			});
+			// Replies are text only: attachment tokens are refused without touching
+			// the filesystem, so a path is never read or sent from a reply.
+			const parsed = parseOutgoingMessage(text);
+			if (parsed.attachments.length > 0) {
+				return 'Attachments are not supported in :reply. Nothing was sent; send files as a separate message.';
+			}
+
+			const processedText = applyEmojiShortcodes(parsed.text);
 
 			if (processedText) {
 				await client.sendReply(
@@ -158,21 +166,20 @@ export const chatCommands: Record<string, ChatCommand> = {
 				return;
 			}
 
-			const lowerPath = filePath.toLowerCase();
-			const isImage = /\.(jpg|jpeg|png|gif)$/.test(lowerPath);
-			const isVideo = /\.(mp4|mov|avi|mkv)$/.test(lowerPath);
+			try {
+				const {kind, displayName} = await uploadLocalMedia(
+					client,
+					chatState.currentThread.id,
+					filePath,
+				);
+				return `${kind === 'photo' ? 'Image' : 'Video'} uploaded: ${displayName}`;
+			} catch (error) {
+				if (error instanceof LocalFileError) {
+					return `Upload blocked: ${error.message}`;
+				}
 
-			if (isImage) {
-				await client.sendPhoto(chatState.currentThread.id, filePath);
-				return `Image uploaded: ${filePath}`;
+				throw error;
 			}
-
-			if (isVideo) {
-				await client.sendVideo(chatState.currentThread.id, filePath);
-				return `Video uploaded: ${filePath}`;
-			}
-
-			return 'Unsupported file type. Please upload an image or video.';
 		},
 	},
 	unsend: {
