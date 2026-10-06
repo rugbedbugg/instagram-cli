@@ -1,10 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
 import process from 'node:process';
 import nodeUtil from 'node:util';
 import debugModule from 'debug';
-import {ConfigManager} from '../config.js';
+import {ConfigManager, resolveDataDir} from '../config.js';
 
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
@@ -28,7 +27,7 @@ class Logger {
 
 	constructor() {
 		// Initialize with default path; will be updated in initialize()
-		this.logsDir = path.join(os.homedir(), '.instagram-cli', 'logs');
+		this.logsDir = path.join(resolveDataDir(), 'logs');
 		this.sessionId = this.generateSessionId();
 		this.logFilePath = path.join(this.logsDir, `session-${this.sessionId}.log`);
 	}

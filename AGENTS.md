@@ -30,6 +30,7 @@ This documentation provides context for AI coding tools like VSCode, Cursor, Gem
 ## Testing Instructions
 
 - Ink smoke tests reside in `tests/` using Ava + `ink-testing-library`; update or extend them when view output changes.
+- Tests run against an isolated temporary data directory (`INSTAGRAM_CLI_HOME`, set by `tests/_setup-isolated-storage.ts`). Never point tests at the real `~/.instagram-cli`; resolve state paths through `ConfigManager` rather than `os.homedir()`.
 - When pre-commit hooks are unavailable, run `npm run format`, `npm run lint-check`, and `npm test` locally before submitting work.
 - Prefer mock runs (`npm run start:mock -- --chat|--feed|--story`) during UI work; update `source/mocks/mock-data.ts` if expectations shift.
 - **TUI testing quirks:** Ink renders to a string buffer, not a real terminal. Use `render()` from `ink-testing-library` and assert against `lastFrame()` output. For visual elements like unread indicators or selection highlights, check for the expected Unicode/ANSI characters in the frame string (e.g., `t.truthy(output?.includes('●'))`).

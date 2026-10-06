@@ -101,6 +101,9 @@
 		},
 		"nodeArguments": [
 			"--loader=ts-node/esm"
+		],
+		"require": [
+			"./tests/_setup-isolated-storage.ts"
 		]
 	},
 	"prettier": "@vdemedes/prettier-config",

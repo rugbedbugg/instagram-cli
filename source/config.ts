@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import process from 'node:process';
 import yaml from 'js-yaml';
 import {createContextualLogger} from './utils/logger.js';
 
@@ -48,9 +49,30 @@ type Config = {
 	advanced: AdvancedConfig;
 };
 
-const DEFAULT_DATA_DIR = path.join(os.homedir(), '.instagram-cli');
+/**
+ * Environment variable that relocates all CLI state (config, sessions, logs, cache).
+ * Used by the test suite to keep automated runs away from real user data.
+ */
+export const DATA_DIR_ENV_VAR = 'INSTAGRAM_CLI_HOME';
 
-const DEFAULT_CONFIG: Config = {
+/**
+ * Resolves the root directory for all CLI state.
+ *
+ * @param environment - Environment to read the override from (injectable for tests).
+ * @returns The absolute data directory, defaulting to `~/.instagram-cli`.
+ */
+export function resolveDataDir(
+	environment: NodeJS.ProcessEnv = process.env,
+): string {
+	const override = environment[DATA_DIR_ENV_VAR]?.trim();
+	if (override) {
+		return path.resolve(override);
+	}
+
+	return path.join(os.homedir(), '.instagram-cli');
+}
+
+const createDefaultConfig = (dataDir: string): Config => ({
 	language: 'en',
 	login: {
 		defaultUsername: undefined,
@@ -69,16 +91,16 @@ const DEFAULT_CONFIG: Config = {
 	},
 	advanced: {
 		debugMode: false,
-		dataDir: DEFAULT_DATA_DIR,
-		usersDir: path.join(DEFAULT_DATA_DIR, 'users'),
-		cacheDir: path.join(DEFAULT_DATA_DIR, 'cache'),
-		mediaDir: path.join(DEFAULT_DATA_DIR, 'media'),
-		generatedDir: path.join(DEFAULT_DATA_DIR, 'generated'),
-		logsDir: path.join(DEFAULT_DATA_DIR, 'logs'),
-		downloadDir: path.join(DEFAULT_DATA_DIR, 'downloads'),
+		dataDir,
+		usersDir: path.join(dataDir, 'users'),
+		cacheDir: path.join(dataDir, 'cache'),
+		mediaDir: path.join(dataDir, 'media'),
+		generatedDir: path.join(dataDir, 'generated'),
+		logsDir: path.join(dataDir, 'logs'),
+		downloadDir: path.join(dataDir, 'downloads'),
 	},
 	image: {},
-};
+});
 
 export class ConfigManager {
 	public static getInstance(): ConfigManager {
@@ -88,14 +110,21 @@ export class ConfigManager {
 
 	private static instance: ConfigManager;
 	private config: Config;
+	// Resolved at construction (not import) so the data dir override is honored
+	private readonly defaultConfig: Config;
 	private readonly configDir: string;
 	private readonly configFile: string;
 	private readonly logger = createContextualLogger('ConfigManager');
 
 	private constructor() {
-		this.configDir = DEFAULT_CONFIG.advanced.dataDir;
+		this.defaultConfig = createDefaultConfig(resolveDataDir());
+		this.configDir = this.defaultConfig.advanced.dataDir;
 		this.configFile = path.join(this.configDir, 'config.ts.yaml');
-		this.config = {...DEFAULT_CONFIG};
+		this.config = {...this.defaultConfig};
+	}
+
+	public getConfigFilePath(): string {
+		return this.configFile;
 	}
 
 	public async initialize(): Promise<void> {
@@ -156,13 +185,13 @@ export class ConfigManager {
 			if (configExists) {
 				const configData = await fs.readFile(this.configFile, 'utf8');
 				const loadedConfig = yaml.load(configData) as Partial<Config>;
-				this.config = this.mergeConfig(DEFAULT_CONFIG, loadedConfig);
+				this.config = this.mergeConfig(this.defaultConfig, loadedConfig);
 			} else {
 				await this.saveConfig();
 			}
 		} catch (error) {
 			this.logger.error('Error loading config:', error);
-			this.config = {...DEFAULT_CONFIG};
+			this.config = {...this.defaultConfig};
 		}
 	}
 

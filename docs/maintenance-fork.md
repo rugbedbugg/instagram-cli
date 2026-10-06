@@ -40,3 +40,9 @@ Pre-commit hooks (`lint-staged` running Prettier and XO) are opt-in per clone:
 ```bash
 npm run hooks:install
 ```
+
+## Test isolation
+
+All CLI state (config, sessions, logs, cache, downloads) lives under a single data directory resolved by `resolveDataDir()` in `source/config.ts`. It defaults to `~/.instagram-cli` and can be relocated with the `INSTAGRAM_CLI_HOME` environment variable.
+
+AVA loads `tests/_setup-isolated-storage.ts` in every worker before any test file. It creates a fresh temporary directory, points `INSTAGRAM_CLI_HOME` at it, refuses to run if that directory would be inside the real data directory, and deletes it when the worker exits. Tests therefore never read existing sessions or write real config or logs. `tests/storage-isolation.test.ts` guards this behavior, including a check that the real config file's metadata is unchanged after a test writes config, session and log state.
