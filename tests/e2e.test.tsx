@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- xo cannot resolve ink-testing-library types in tests */
 
 import React from 'react';
 import test, {type ExecutionContext} from 'ava';
@@ -7,6 +7,7 @@ import Index from '../source/commands/index.js';
 import Version from '../source/commands/version.js';
 import {AppMock} from '../source/mocks/app.mock.js';
 import {mockThreads, mockMessages} from '../source/mocks/mock-data.js';
+import {waitForFrame} from './_wait-for-frame.js';
 
 const delay = async (ms: number): Promise<void> => {
 	return new Promise(resolve => {
@@ -33,9 +34,11 @@ test('unknown command shows helpful error', (t: ExecutionContext) => {
 test('version command renders all version info', async (t: ExecutionContext) => {
 	const {lastFrame, unmount} = render(<Version />);
 
-	await delay(500);
-
-	const output = lastFrame();
+	// Version info is loaded asynchronously (package.json lookups), so wait for
+	// it to render rather than for a fixed time.
+	const output = await waitForFrame(lastFrame, frame =>
+		frame.includes('Instagram app version:'),
+	);
 	t.regex(
 		output ?? '',
 		/instagram-cli: v\d+\.\d+\.\d+/,
