@@ -1,61 +1,26 @@
-# Instagram CLI (Python, Legacy)
+# Legacy Python client
 
-> This is the legacy Python client documentation.
+This directory preserves the Python client inherited from [supreme-gg-gg/instagram-cli](https://github.com/supreme-gg-gg/instagram-cli). Current downstream development targets the TypeScript implementation described in the [Instagram-CLI README](../README.md).
 
-The ultimate weapon against brainrot. Shown experimentally to effectively reduce screentime.
+The historical Python package name `instagram-cli`, executable `instagram`, original authors, and upstream homepage remain in `pyproject.toml` and `uv.lock`. The PyPI package belongs to the upstream release history; it is not a downstream distribution. The TypeScript command is now `insta-cli`, with `instagram-cli` retained as an alias.
 
-![PyPI](https://img.shields.io/pypi/v/instagram-cli)
-[![PyPI Downloads](https://static.pepy.tech/badge/instagram-cli)](https://pepy.tech/projects/instagram-cli)
-![Python](https://img.shields.io/pypi/pyversions/instagram-cli)
-[![MIT license](https://img.shields.io/github/license/supreme-gg-gg/instagram-cli.svg)](https://github.com/supreme-gg-gg/instagram-cli/blob/main/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/supreme-gg-gg/instagram-cli.svg)](https://github.com/supreme-gg-gg/instagram-cli/issues)
+No current live authentication or feature compatibility is claimed for this legacy client. It uses unofficial private APIs and is unaffiliated with Instagram or Meta; use can carry account or platform risk. The original MIT attribution is preserved in [LICENSE](../LICENSE).
 
-<!-- ![PyPI - Downloads](https://img.shields.io/pypi/dm/instagram-cli) -->
-<!-- ![LOC](https://tokei.rs/b1/github/supreme-gg-gg/instagram-cli?category=code) -->
+## Source development
 
-https://github.com/user-attachments/assets/e9206e14-8141-49b2-8e2c-17c76402e3cb
-
-> [!WARNING]
-> This project is not affiliated with, authorized, or endorsed by Instagram. This is an independent and unofficial project. Using it might violate Meta's Terms of Service. Use at your own risk.
-
-## What does it do?
-
-- We transform Instagram from a brainrot hell into productivity tool
-- We allow you to focus on meaningful conversations
-- We celebrate the art and simplicity of terminal UI
-- We extend Instagram with powerful plugins like latex, chat summarisation
-
-> [!TIP]
-> Use Instagram with 100% keyboard control - no mouse clicks or touchscreen taps needed! Perfect for developers and Linux users who love staying on the keyboard 🤣
-
-### Need a break and have some brainrot?
-
-Want to watch Instagram Reels right from your terminal? Check out [reels-cli](https://github.com/notMarkMP1/reels-cli). It’s a great way to enjoy some light entertainment without leaving your keyboard. (Not affiliated and not maintained by us, but highly recommended for terminal fans.)
-
-## Python Client
-
-The simplest way to get started is to install the package from PyPI if you have Python installed:
+For separately scoped work on the legacy code, from the repository root:
 
 ```bash
-pip install instagram-cli
+cd instagram-py
+uv sync --locked
+uv run instagram --help
 ```
 
-If you do not have Python installed, you can download and install it from the [official website](https://www.python.org/downloads/).
+Honor `requires-python` in `pyproject.toml`. Report downstream repository issues at [rugbedbugg/Instagram-CLI](https://github.com/rugbedbugg/Instagram-CLI/issues).
 
-Note that Python links to the `instagram` command, while TypeScript links to `instagram-cli`.
+## Historical command reference
 
-> [!CAUTION]
-> We do not recommend using the TypeScript and Python client simultaneously with the same account to reduce the risk of account bans. We recommend using the TypeScript client when possible since it is much less likely to trigger Instagram's anti-bot mechanisms.
-
-### Installation from Source
-
-```bash
-git clone https://github.com/supreme-gg-gg/instagram-cli.git
-cd instagram-cli
-pip install .
-```
-
-> [!NOTE] The Python client is no longer maintained for Windows due to incompatibilities between the `curses` and `windows-curses` libraries. We recommend using WSL / Docker, or better, just use the TypeScript client on Windows.
+The inherited reference below describes implemented interfaces, not live-validated behavior. Old demo media and generated samples are historical examples.
 
 ## Commands
 
@@ -143,13 +108,13 @@ We support LaTeX rendering and sending as images in the chat. For example,
 
 `:latex $\frac{a}{b} + c = d$`
 
-![sample1](https://github.com/supreme-gg-gg/instagram-cli/blob/main/resource/latex_sample_1.png?raw=true)
+![sample1](../resource/latex_sample_1.png)
 
 ```bash
 :latex $\left( \begin{bmatrix} a & b \\ c & d \end{bmatrix} \cdot \begin{bmatrix} e & f \\ g & h \end{bmatrix} \right) + \begin{bmatrix} i & j \\ k & l \end{bmatrix}^{-1} \times \left( \int_0^1 x^2 \, dx \right) + \begin{bmatrix} \sin(\theta) & \cos(\theta) \\ \tan(\phi) & \ln(\psi) \end{bmatrix}$
 ```
 
-![sample2](https://github.com/supreme-gg-gg/instagram-cli/blob/main/resource/latex_sample.png?raw=true)
+![sample2](../resource/latex_sample.png)
 
 Please note that the LaTeX code **_MUST_** be enclosed in `$` symbols.
 
@@ -198,4 +163,4 @@ If the date is not provided, the message will be scheduled for the current day. 
 
 ## Contributing
 
-We welcome contributors! Please see the comprehensive [CONTRIBUTING.md](CONTRIBUTING.md) file for details on how to get started, create issues, and submit pull requests.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for the maintained downstream's contribution process.

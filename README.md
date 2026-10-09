@@ -1,189 +1,176 @@
-# Instagram CLI
+<div align="center">
 
-The ultimate weapon against brainrot. The fastest, lightest, and most portable Instagram client.
+# Instagram-CLI
 
-$$
-\text{Instagram}_{\text{CLI}} = \lim_{\text{screen time} \to 0} \text{Productivity} \to \infty
-$$
+A maintained terminal client for Instagram, focused on keyboard-driven messaging, feeds, stories, media, and compatibility with Instagram's evolving private APIs.
 
-[![npm](https://img.shields.io/npm/v/@i7m/instagram-cli?style=flat-square)](https://www.npmjs.com/package/@i7m/instagram-cli)
-[![downloads](https://img.shields.io/npm/dm/@i7m/instagram-cli?style=flat-square)](https://www.npmjs.com/package/@i7m/instagram-cli)
-![PyPI](https://img.shields.io/pypi/v/instagram-cli)
-[![PyPI Downloads](https://static.pepy.tech/badge/instagram-cli)](https://pepy.tech/projects/instagram-cli)
-[![GitHub issues](https://img.shields.io/github/issues/supreme-gg-gg/instagram-cli.svg)](https://github.com/supreme-gg-gg/instagram-cli/issues)
+**[Explore the docs](https://github.com/rugbedbugg/Instagram-CLI/tree/main/docs)**
 
-https://github.com/user-attachments/assets/ddcc5a2d-15da-4cd6-8747-9e7956b32c0b
+[Visit](https://github.com/rugbedbugg/Instagram-CLI) · [Report Bug](https://github.com/rugbedbugg/Instagram-CLI/issues/new?template=bug_report.md) · [Request Feature](https://github.com/rugbedbugg/Instagram-CLI/issues/new?template=feature_request.md)
+
+[![CI](https://github.com/rugbedbugg/Instagram-CLI/actions/workflows/test-ts.yml/badge.svg?branch=main)](https://github.com/rugbedbugg/Instagram-CLI/actions/workflows/test-ts.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22-43853d)](package.json)
+[![MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+
+</div>
+
+## About The Project
+
+Instagram-CLI is a terminal and TUI client with keyboard navigation, interactive views, and commands for scripting. It descends from [supreme-gg-gg/instagram-cli](https://github.com/supreme-gg-gg/instagram-cli). As upstream maintenance slowed relative to Instagram's protocol changes, this implementation became independently maintained downstream by [rugbedbugg](https://github.com/rugbedbugg).
+
+The goal is to keep the client safe, testable, and compatible. Compatibility repairs and reliable operation take priority over adding features.
+
+### Development Status
+
+The downstream engineering baseline is stable: CI on Node 22 and 24, isolated offline tests, hardened local-file handling, and maintained repository infrastructure.
+
+**Live Instagram authentication compatibility is currently being repaired and has not yet been revalidated against the current private API.** Chat, feeds, stories, and other authenticated flows are implemented, but are not currently claimed as live-validated. Passing tests does not establish that Instagram accepts those flows.
 
 > [!WARNING]
-> This project is not affiliated with, authorized, or endorsed by Instagram. This is an independent and unofficial project. Using it might violate Meta's Terms of Service. Use at your own risk.
+> This is unofficial software, unaffiliated with Instagram or Meta. It uses private, undocumented Instagram APIs that can change without notice. Use may conflict with platform terms or lead to account restrictions.
 
-## Why Instagram CLI?
+### Capabilities
 
-Empower yourself to become a 10x Instagrammer by minimizing distractions, enabling 100% keyboard control, and accessing it from any terminal — whether in your VSCode editor or your Linux server.
+| Area            | Implemented                                                                                | Validation status                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Messaging       | Chat TUI, inbox, read/send/reply/unsend commands, realtime updates, photo/video sending    | UI and local-file paths are offline-tested; service compatibility awaits authentication repair |
+| Browsing        | Feed, stories, profiles, notifications, terminal media rendering                           | Mock views and selected components are offline-tested; live flows are unverified               |
+| Local operation | Help, version, configuration, saved-account handling                                       | Offline-tested; saved-session acceptance still depends on Instagram                            |
+| File safety     | Protected-path checks, bounded reads, content validation, explicit attachment confirmation | Offline-tested; see the security policy below                                                  |
 
-Instagram CLI allows you to use social media more intentionally -- to stay connected with people you care about rather than being exploited for your attention.
+### Security
 
-- Chat with your friends without falling into endless brainrot
-- Stay updated with post and stories from people around you
-- Focus on meaningful, intentional conversations and be productive
-- Full keyboard navigation and shortcuts, no mouse, no touchscreens
-- Celebrate the art and simplicity of **terminal UI (TUI)**
+Local file sending uses canonical path resolution, protected-location checks, symlink-aware validation, size limits, and content/type validation. Attachments written as `#path` require explicit confirmation before content is read or sent. Upload methods enforce prepared media produced by the file policy.
 
-## Installation
+These checks reduce accidental disclosure; they cannot identify every possible secret in an ordinary file. See [Local File Safety](docs/local-file-safety.md) for the threat model, limits, and enforcement details.
 
-### NPM
+## Built With
 
-Requires Node.js v22 or higher.
+- **TypeScript and Node.js >=22** for the maintained client.
+- **React, Ink, and Pastel** for the terminal interface and command routing.
+- **instagram-private-api and instagram_mqtt** for private API and realtime integration, with local patches where needed.
+- **AVA, ink-testing-library, XO, and Prettier** for offline verification and code quality.
 
-```bash
-npm install -g @i7m/instagram-cli
-```
+The inherited Python client remains under [`instagram-py/`](instagram-py/README.md) as legacy code. Current downstream work targets TypeScript.
 
-### Homebrew (macOS/Linux)
+## Roadmap
 
-```bash
-brew tap supreme-gg-gg/tap
-brew install instagram-cli
-```
+- [x] Establish Node 22/24 CI and isolated tests.
+- [x] Harden local-file sending and preserve existing session/configuration paths.
+- [x] Establish the Instagram-CLI downstream identity and command compatibility.
+- [ ] Build an offline Instagram fingerprint/compatibility harness.
+- [ ] Repair authentication and separately revalidate live flows.
+- [ ] Prepare a downstream release after compatibility validation and registry ownership checks.
 
-The formula is available [here](https://github.com/supreme-gg-gg/homebrew-tap/blob/main/Formula/instagram-cli.rb).
+See [issues](https://github.com/rugbedbugg/Instagram-CLI/issues) and the [maintenance model](docs/maintenance.md).
 
-We also ship a Python client with nostalgic UNIX vibes since Instagram CLI was first built in Python with `curses`. For installation and more information, see [Python Client Documentation](./instagram-py/README.md).
+## Getting Started
 
-### Community Packages
+### Prerequisites
 
-The following packages are supported by the community. The maintainers of Instagram CLI do not provide support for these packages.
+- Git, npm, and **Node.js >=22**. CI validates Node 22 and 24; use `mise` to select either runtime.
+- A terminal for the TUI. Image rendering depends on terminal capabilities; text-based rendering is also available.
 
-#### AUR (Arch Linux)
+### Installation
 
-```bash
-yay -S instagram-cli
-```
-
-#### Snap (Linux)
-
-```bash
-snapcraft pack
-sudo snap install instagram-cli_1.4.0_amd64.snap --dangerous
-snap run instagram-cli.instagram-cli
-# OR, since /snap/bin is in PATH
-instagram-cli
-```
-
-We welcome contributions to add more installation methods.
-
-For installation from source, please refer to the [TypeScript Client Documentation](./DEVELOPMENT.md).
-
-## CLI Commands
-
-The following commands will be available after installing the package:
+**Current source install:** no downstream npm release exists.
 
 ```bash
-instagram-cli                                  # display title art
-instagram-cli --help                           # view available commands
-
-# Authentication
-instagram-cli auth login --username            # login with username and password
-instagram-cli auth logout                      # logout and removes session
-instagram-cli auth switch <username>           # switch to another saved account
-instagram-cli auth whoami                      # display current default user
-
-# Launches TUI interfaces
-instagram-cli chat -u <username> -t <title>    # start chat interface
-instagram-cli feed                             # view posts from people you follow
-instagram-cli stories                          # view stories from people you follow (BETA)
-instagram-cli notify                           # view notifications (inbox, followers, mentions)
-
-# Modify configuration
-# The configuration file is located at `~/.instagram-cli/config.ts.yaml`.
-instagram-cli config                           # lists all config
-instagram-cli config <key> <value>             # set config key to value
-instagram-cli config edit                      # open config file in editor
+git clone https://github.com/rugbedbugg/Instagram-CLI.git
+cd Instagram-CLI
+npm ci
+npm run build
+npm run start -- --help
+npm run start -- version
 ```
 
-If you want to use Instagram CLI with AI agents, see [one-turn commands](#one-turn-commands-for-ai-agents) that are non-interactive and designed for agents.
-
-> [!TIP]
-> You can easily manage multiple accounts with Instagram CLI!
-> Your login for each account will be saved **locally** and you can switch between them using the `instagram-cli auth switch <username>` command or run a certain command with a specific account using the `--username` flag.
-
-## Chat Commands
-
-Inside the chat interface and after selecting a thread, you can navigate all interface with 100% keyboard support. When messaging, the following commands are available:
+To make the commands available outside the checkout, optionally link this local build:
 
 ```bash
-# Select messages to perform actions
-:select
-:react <emoji | :emoji_name:>
-:reply <text>
-:unsend
-
-# Media Handling
-:upload <path-to-image-or-video>
-:download <path-to-save> # Requires :select first to select message
-
-# Navigation
-:k # go up
-:K # go to top
-:j # go down
-:J # go to bottom
+npm link
+insta-cli --help
 ```
 
-> [!TIP]
-> You can attach text files or images to a message by using `#` followed by the file path. For example, `#path/to/file.txt` or `#path/to/image.png`. The CLI asks you to confirm (`y`/`n`) before any file is read or sent, and refuses credentials and other protected files. Write `\#` for a literal `#`.
-> Use `tab` and `enter` to autocomplete file paths. You can include emojis in messages with `:emoji_name:` e.g. `:thumbsup:` = 👍 (with fuzzy matching).
+`npm link` registers `insta-cli` and the compatibility alias `instagram-cli` in your npm prefix. Both run the same entry point; an existing command with either name may be replaced by the link. You can keep using `npm run start -- <command>` without linking.
 
-Instagram CLI supports mouse interactions as well, so you can click on messages to select them, scroll through the chat, and click to reposition the cursor when typing messages. We're gradually rolling out more mouse support in our TUI!
+**Future npm release:** the requested package name is `insta-cli`, but this checkout remains `"private": true`. Registry installation is not a supported downstream installation method yet. Upstream npm, Homebrew, PyPI, and Snap packages do not contain this maintained implementation.
 
-## One-turn Commands (for AI Agents)
+## Usage
 
-These commands are non-interactive (no TUI) — they run once, print to stdout, and exit. They're designed for scripting, piping, and AI agent tool-use. All commands accept `-o json` for structured JSON output. Example usage includes:
+`insta-cli` is the canonical command. Existing scripts using `instagram-cli` continue to work through the compatibility alias. `insta-cli version` reports the project, package, and API versions; `--version` retains its plain numeric output for scripts.
+
+### Local commands
 
 ```bash
-# These are only example usages. Run -h / --help for full manual.
-instagram-cli inbox
-instagram-cli send <thread> --text "Hey, how are you?"
-instagram-cli read <thread> --limit 10 --mark-seen --output json
-instagram-cli read <thread> --message-id <id> --download "./photo.jpg"
-instagram-cli reply <thread> --message-id <id> --text "Hey, how are you?"
-instagram-cli unsend <thread> --message-id <id>
+insta-cli --help
+insta-cli version
+insta-cli config
+insta-cli config image.protocol ascii
 ```
 
-`<thread>` accepts a thread ID, username, or fuzzy thread title. Prefer passing thread IDs (from `inbox -o json`) directly to avoid redundant lookups.
+### Authenticated commands
 
-> [!TIP]
-> **Building an AI agent that uses Instagram?** Load [`./skills/instagram-skill/SKILL.md`](./skills/instagram-skill/SKILL.md)
-> into your agent's workspace (or point your agent framework at it). It covers all commands, JSON
-> output format, thread resolution, multi-account usage, and a recommended workflow.
+The following commands exist, but require Instagram authentication and are **not currently live-validated**. These examples describe the interface, not a promise that login or service operations succeed today.
 
 ```bash
-npx skills add supreme-gg-gg/instagram-cli
+insta-cli auth login
+insta-cli auth whoami
+insta-cli auth switch saved_username
+insta-cli auth logout
+insta-cli chat
+insta-cli feed
+insta-cli stories
+insta-cli profile --help
+insta-cli notify
+insta-cli inbox --output json
+insta-cli read username --limit 10 --output json
+insta-cli send username --text "Hello"
+insta-cli send username --file ./photo.jpg
+insta-cli reply username --message-id MESSAGE_ID --text "Thanks"
+insta-cli unsend username --message-id MESSAGE_ID
 ```
 
-## Displaying Images in TUI
+Run `insta-cli <command> --help` for arguments and flags. Chat supports `j`/`k` navigation and in-app commands described in [Chat Commands](docs/chat-commands-design.md). For scripting, see the [one-turn command guide](skills/instagram-skill/SKILL.md).
 
-When rendering images in the terminal, we automatically select the best image protocol based on your terminal emulator. If you experience issues with image rendering or wish to customize the image protocol, you can change the config setting with `instagram-cli config image.protocol <option>`. The available options are `"ascii", "halfBlock", "braille", "kitty", "iterm2", "sixel"`.
+### Configuration
 
-> [!NOTE]
-> Make sure the configured protocol is supported by your terminal (e.g. `sixel` and `iterm2` protocols won't work in Kitty).
+Existing state remains in **`~/.instagram-cli`**, including `config.ts.yaml`, saved sessions under `users/`, and logs under `logs/`. **`INSTAGRAM_CLI_HOME`** overrides the root directory. The rebrand does not move or invalidate stored data; Instagram may still reject a saved session independently of its local format.
 
-We use [Ink Picture](https://github.com/endernoke/ink-picture), our own open-source Ink `<Image>` component, for displaying images in the terminal. Any related issues or pull requests should be filed on the upstream repository.
+Use `insta-cli config` to inspect settings or `insta-cli config <key> <value>` to update them. Review logs before sharing them and remove credentials, session data, and personal information. See [Logging](docs/logging.md).
 
-## Contributing
+### Development and testing
 
-We welcome contributors! Please see the comprehensive [CONTRIBUTING.md](CONTRIBUTING.md) file for details on how to get started, create issues, and submit pull requests. It is very important that you follow these instructions because we manage two different clients in the same repository. _Instagram CLI is NOT meant to be used for bot-behaviours, we will not accept contributions that add such features._
+With Node 22 or 24 selected through `mise`, run the same gates as CI:
 
-### Reporting Issues
+```bash
+npm ci
+npm run build
+npm run lint-check
+npm test
+```
 
-Occasionally, Instagram may update their API or protocols which can cause certain features to break. If you encounter any issues, please report them on our [GitHub Issues page](https://github.com/supreme-gg-gg/instagram-cli/issues). Make sure to attach the relevant log files located at `~/.instagram-cli/logs/` to help us diagnose and fix the problem quickly. You may want to redact sensitive data like your username for privacy.
+AVA creates temporary state directories through `INSTAGRAM_CLI_HOME`. Tests use mocks and do not require Instagram credentials or requests. For an offline TUI preview:
 
-### Sister projects
+```bash
+npm run dev
+npm run start:mock -- --chat
+# Other views: --feed or --story
+```
 
-We contributed the following extensions to the [Ink](https://github.com/vadimdemedes/ink) open-source ecosystem for building Terminal UI apps:
+`npm run dev` includes mocks; the production build excludes them. See [Development](DEVELOPMENT.md) and [Contributing](CONTRIBUTING.md) for setup, hooks, and review guidance.
 
-- [Ink Picture, Ink-native image component](https://github.com/endernoke/ink-picture)
-- [Wax, Ink routing framework](https://github.com/endernoke/wax).
+## Contributors / Upstream & Attribution
 
-## Star History
+Instagram-CLI is derived from **[supreme-gg-gg/instagram-cli](https://github.com/supreme-gg-gg/instagram-cli)** and continues under the **MIT license**. The original copyright notice for **Jet Chiang and James Zheng** remains intact in [LICENSE](LICENSE).
 
-[![Star History Chart](https://star-history.dera.page/svg?repos=supreme-gg-gg/instagram-cli&type=date&legend=top-left)](https://star-history.dera.page/#supreme-gg-gg/instagram-cli&type=date&legend=top-left)
+[rugbedbugg](https://github.com/rugbedbugg) maintains this downstream implementation. The repository preserves the original Git history and contributor authorship; upstream contributors are acknowledged for their work without implying they maintain this downstream. See the [commit history](https://github.com/rugbedbugg/Instagram-CLI/commits/main/) and [upstream contributors](https://github.com/supreme-gg-gg/instagram-cli/graphs/contributors).
+
+Contributions to compatibility, safety, tests, and usability are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Acknowledgments
+
+Thanks to the original project authors and contributors, and to the maintainers of Ink, Pastel, ink-picture, instagram-private-api, instagram_mqtt, and the testing tools this client builds on.
+
+## License
+
+Distributed under the [MIT License](LICENSE). Original copyright notices and inherited authorship are preserved.

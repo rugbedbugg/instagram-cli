@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the design and behavior of the Instagram CLI chat interface, addressing the core issues of pagination, view management, and input handling.
+This document describes the design and behavior of the Instagram-CLI chat interface, addressing the core issues of pagination, view management, and input handling.
 
 ## Core Issues to Solve
 

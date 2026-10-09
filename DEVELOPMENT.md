@@ -1,188 +1,95 @@
-# Development
+# Developing Instagram-CLI
 
-FAQ: Why are there two different codebases for TypeScript and Python? This has to do with our history! At first, the project was built in pure python with curses, a python binding for ncurses in C commonly used for UNIX terminal UI apps. However, as the project grew, we found that developing with Typescript gave us several advantages such as React-based UI with Ink (better DX and modern outlook), and better API library that supports MQTT protocol.
+The maintained implementation is the TypeScript client. It descends from the original project's Python/curses client, retained under `instagram-py/` for legacy reference.
 
-## TypeScript Development
+Live Instagram authentication is currently degraded and has not been revalidated. Routine development and verification use mocks without Instagram requests.
 
-### Getting Started
+## Setup
 
-If you do not have Node.js installed, you can download and install it from the [official website](https://nodejs.org/). Node.js 22 or above is required (see `engines` in `package.json`). We recommend using a version manager such as `nvm` ([nvm-sh/nvm](https://github.com/nvm-sh/nvm)) or `mise`.
-
-To get started, you need to install the dependencies:
+Use Node.js >=22 through `mise`; CI validates Node 22 and 24. The existing version policy is conservative. This rebrand changes no runtime requirements, dependency versions, or application version.
 
 ```bash
-npm ci
+git clone https://github.com/rugbedbugg/Instagram-CLI.git
+cd Instagram-CLI
+mise exec node@24 -- npm ci
 ```
 
-`npm ci` only installs dependencies and applies the `patches/` via `patch-package`; it does not modify your Git configuration.
-
-We are using `lint-staged` and `husky` for pre-commit hooks to ensure code quality for TypeScript. They are opt-in: run the following once per clone to enable them (this sets `core.hooksPath` in the repository's `.git/config`). They will run `prettier` and `xo` on staged files before each commit.
+`npm ci` installs the lockfile and applies `patches/` through `patch-package`. It does not modify Git configuration. Pre-commit hooks are opt-in:
 
 ```bash
 npm run hooks:install
 ```
 
-To disable them again, run `git config --unset core.hooksPath`.
+This sets `core.hooksPath` and runs Prettier/XO on staged files. Use `git config --unset core.hooksPath` to disable it for the clone.
 
-If linter and formatter is not run automatically, you can run it manually with:
+## Build and run
 
 ```bash
-npm run format # only runs prettier
-npm run lint-check # you should ALWAYS run this before committing if it's not automatic
+npm run dev          # development build, including mocks
+npm run dev:watch    # rebuild when source changes
+npm run start -- --help
+npm run start -- version
+npm run build        # type-check and build production output, excluding mocks
 ```
 
-### Development
+The bundler is configured in `esbuild.config.mjs`. Commands live in `source/commands/`; use `npm run start -- <command>` to invoke the built CLI.
 
-To run the CLI in development mode:
+After building, optional `npm link` installs links for canonical `insta-cli` and compatibility alias `instagram-cli` in the active npm prefix. Both point to `dist/cli.js`. Links can replace existing commands with those names; no registry installation is required.
+
+## Offline UI development
 
 ```bash
 npm run dev
+npm run start:mock -- --chat
+npm run start:mock -- --feed
+npm run start:mock -- --story
 ```
 
-This will watch for changes in the source files and rebuild the CLI automatically.
-You will need to restart the CLI manually to see the changes, run it with:
+Use one view per invocation. Update `source/mocks/mock-data.ts` alongside changes to the UI's expected data. See [the mock guide](source/mocks/README.md) and design documents in `docs/`.
+
+## Required gates
+
+Run the complete sequence separately for both supported CI runtimes:
 
 ```bash
-npm run start -- <command>
+mise exec node@22 -- npm ci
+mise exec node@22 -- npm run build
+mise exec node@22 -- npm run lint-check
+mise exec node@22 -- npm test
+
+mise exec node@24 -- npm ci
+mise exec node@24 -- npm run build
+mise exec node@24 -- npm run lint-check
+mise exec node@24 -- npm test
 ```
 
-Basically replace `instagram-cli` with `npm run start`, for example:
+AVA automatically creates temporary state via `tests/_setup-isolated-storage.ts`. Never point tests at real `~/.instagram-cli` data. `INSTAGRAM_CLI_HOME` and all established storage paths remain unchanged. Mock the client; do not use automated tests to probe Instagram.
 
-```bash
-npm run start -- auth login # = instagram-cli auth login
-npm run start -- chat --username some_username # = instagram-cli chat --username some_username
-```
+`npm run format` applies formatting; `npm run lint-check` checks Prettier and XO. `npm test` repeats those checks and runs AVA. Identity tests build an isolated package layout and exercise both executable names without an existing `dist/` build.
 
-### Error Logs
+For Ink tests, use `ink-testing-library`, assert on `lastFrame()`, and wait for rendered state rather than relying on fixed delays. Add coverage for keyboard input, empty states, Unicode, and any changed local-file behavior.
 
-If Ink/React errors go to stderr rather than our logger, it will not be visible. Instead, run the CLI with this command and stream the logs to a file:
+## Source layout
 
-```bash
-npm run start chat 2> error.log
-```
+| Path                                                    | Responsibility                                                     |
+| ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `source/cli.ts`, `source/commands/`                     | Pastel entry point and commands                                    |
+| `source/client.ts`                                      | Instagram API and realtime integration                             |
+| `source/config.ts`, `source/session.ts`                 | Compatible local state and sessions                                |
+| `source/ui/components/`, `views/`, `hooks/`, `context/` | Ink rendering, orchestration, derived state, and client boundaries |
+| `source/utils/`                                         | Logging, message parsing, file policy, and shared utilities        |
+| `source/mocks/`, `tests/`                               | Offline fixtures and verification                                  |
+| `patches/`                                              | Maintained patches to API and CLI dependencies                     |
 
-### Using mocks
+Keep ESM imports with explicit `.js` extensions. Use `initializeLogger()` and contextual loggers; preserve stdout for the TUI. Call `InstagramClient.shutdown()` when realtime sessions are torn down.
 
-To avoid exhausting Instagram's API calls during development, you can use the mock system to test your UI changes. This would not work if you are changing API-related code, but for pure UI changes this is very useful.
+## Reference documentation
 
-```bash
-npm run start:mock -- --chat | --feed | --story
-```
+- [Maintenance and releases](docs/maintenance.md)
+- [Local-file safety](docs/local-file-safety.md)
+- [Logging](docs/logging.md)
+- [Login implementation](docs/login.md) and [API debugging](docs/api-debugging.md), which describe implementation rather than current live compatibility
 
-Similarly, you should update the mock data when making changes to relevant client endpoints.
+## Legacy Python client
 
-### Local Build
-
-To build for production locally, this will exclude tests and mocks:
-
-```bash
-npm run build
-```
-
-We use `esbuild` for both production and development builds. You can find the configuration in `esbuild.config.mjs`.
-
-### Debugging APIs
-
-Refer to [this document](docs/api-debugging.md) for several utilities that can help with your development.
-
-### Install
-
-This will link the `instagram-cli` executable to your global `node_modules`, so you can run `instagram-cli` from anywhere. If you have it installed from NPM, this will override it.
-
-```bash
-npm link
-```
-
-### Testing
-
-Unit tests are not required. But if you're adding new commands that render terminal UI (views), please add basic tests to ensure they run without errors in `tests`. These are run using `ava` during CI.
-
-### Notes
-
-#### Pastel
-
-- We use [pastel](https://github.com/vadimdemedes/pastel) for building CLI commands
-- `pastel` supports `tsx` for each commands, so you can just render UI directly in there
-- Read pastel docs for how to group commands, how to use `zod`, etc.
-
-### Ink
-
-- We use [ink](https://github.com/vadimdemedes/ink) for building UI
-- We use existing `@inkjs/ui` components for UI such as alert, text input, loading, etc.
-
-### Other libraries
-
-We use `ink-picture` and `wax` for image rendering and routing. They are developed in-house but are open-source as well. For those issues, you can open issues in their respective repositories.
-
-### Structure
-
-```plaintext
-source/
-├── cli.ts              # Main CLI entry point (meow)
-├── client.ts           # Unified Instagram API client (all IG logic)
-├── config.ts           # YAML-based config management
-├── session.ts          # Session serialization and management
-│
-├── commands/           # Each CLI command in its own file
-│   ├── auth/           # Subcommands grouped in folders
-│   │   ├── login.tsx
-│   │   └── logout.tsx
-│   ├── chat.tsx
-│   ├── config.tsx
-│   ├── notify.tsx
-│   ├── stats.tsx
-│   └── ...
-│
-├── ui/
-│   ├── components/     # Stateless, reusable Ink components (MessageList, InputBox, etc.)
-│   ├── views/          # Top-level stateful views (ChatView, ThreadListView, etc.)
-│   ├── hooks/          # Custom React hooks (useClient, useThreads, etc.)
-│   └── context/        # React context providers (ClientContext)
-│
-└── types/              # All TypeScript type definitions
-    ├── instagram.ts
-    └── ui.ts
-```
-
-## Python Development
-
-**You need to cd into the `instagram-py` directory for Python client development:**
-
-```bash
-cd instagram-py
-```
-
-We have migrated to `uv` for managing Python versions and virtual environments. Refer to [astral-sh/uv](https://github.com/astral-sh/uv) for installation instructions. The simplest way is to install using `pip install uv` but you may prefer other installation methods.
-
-Create a virtual environment to isolate your dependencies:
-
-```bash
-uv venv .venv
-uv sync
-source .venv/bin/activate
-```
-
-This installs all deps (including dev, you can use `--no-dev` flag to skip those) and builds the package in editable mode.
-
-You can then run the CLI using:
-
-```bash
-uv run instagram <command>
-```
-
-### Manual Code Quality Checks
-
-We have removed automatic pre-commit hooks for Python code. Please run the following commands manually to ensure code quality before committing your changes.
-
-```bash
-uv ruff check .
-uv ruff format .
-```
-
-### Tests
-
-Basics tests are in `instagram-py/tests`. Run them using:
-
-```bash
-uv run pytest tests/
-```
+The Python client keeps its historical package identity and upstream publishing guard. It is not the maintained TypeScript implementation and is not covered by the Node CI claims. See its [legacy documentation](instagram-py/README.md); use `uv` for Python environments and honor `pyproject.toml` if working on it separately.

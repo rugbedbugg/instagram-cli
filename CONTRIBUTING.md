@@ -1,100 +1,40 @@
-# Contributing to instagram-cli
+# Contributing to Instagram-CLI
 
-Thank you for contributing to instagram-cli!
+Instagram-CLI is independently maintained downstream at [rugbedbugg/Instagram-CLI](https://github.com/rugbedbugg/Instagram-CLI), derived from [supreme-gg-gg/instagram-cli](https://github.com/supreme-gg-gg/instagram-cli). Current work targets the TypeScript client in `source/`; `instagram-py/` is legacy code.
 
-## Project Structure
+Live authentication is currently degraded and awaits revalidation. Prefer offline reproductions, mocks, and fixtures when proposing fixes. A passing unit test is not evidence of live API compatibility.
 
-This repository contains **two separate clients** for Instagram:
+## Issues and proposals
 
-- **TypeScript Client** (`./source` folder in root)
-- **Python Client** (`instagram-py/` folder)
+Use the downstream [issue tracker](https://github.com/rugbedbugg/Instagram-CLI/issues) for bugs and feature proposals. For substantial work, discuss the scope before implementation. Include the output of `insta-cli version`, runtime and terminal details, and reproducible steps. Redact credentials and personal information from logs.
 
-The team is primarily focused on actively developing the TypeScript client. However, both clients are maintained actively. Choose the client to work on based on the tag on the issue (typescript / python). If the issue is untagged, we always prefer developing the TypeScript client.
+## Development setup
 
-## How to Contribute
+1. Fork **rugbedbugg/Instagram-CLI** on GitHub and clone your fork.
+2. Follow [DEVELOPMENT.md](DEVELOPMENT.md) with Node >=22 and npm.
+3. Create a branch such as `fix/chat-navigation` or `docs/command-examples`.
 
-> If you are experienced in contributing to open-source projects, jump ahead to [DEVELOPMENT.md](./DEVELOPMENT.md) for setup and code contribution instructions.
-
-### 1. Create an Issue
-
-Before working on any changes, **you must first create an issue** in the [Issues](../../issues) section so that everyone is informed and you can receive feedback from others in the community and maintainers. Your issue should fall into one of these categories:
-
-- **Bug Report** – If you've found a bug, please provide clear steps to reproduce it.
-- **Feature Request** – If you have an idea for a new feature, describe its purpose and how it improves the project.
-
-> [!IMPORTANT]
-> Please clearly indicate that you are working on the issue by commenting or assigning yourself to it. Otherwise, we assume the issue is up for grabs or will be worked on by maintainers.
-
-### 2. Fork the Repository
-
-Fork this repository to your own GitHub account and clone it locally:
+If adding remotes to a contributor clone, use `downstream` for the maintained repository. Reserve `upstream` for the original ancestry:
 
 ```bash
-git clone https://github.com/<your-username>/instagram-cli.git
-cd instagram-cli
+git remote add downstream https://github.com/rugbedbugg/Instagram-CLI.git
+git remote add upstream https://github.com/supreme-gg-gg/instagram-cli
+git remote set-url --push upstream no_push_to_upstream
 ```
 
-Add the original repository as an upstream remote:
+The maintainer's `origin` points to the downstream; a contributor's `origin` points to their own fork. See the [maintenance model](docs/maintenance.md) for upstream import and release policy.
 
-```bash
-git remote add upstream https://github.com/supreme-gg-gg/instagram-cli.git
-```
+## Changes and verification
 
-### 3. Create a Feature Branch
+- Keep API integration in `source/client.ts` and its helpers; preserve client teardown and logger boundaries.
+- Read the relevant design document in `docs/` before changing an existing component.
+- Add focused tests for changed behavior. UI tests use Ink mocks; tests must not use real sessions or contact Instagram.
+- Follow the [local-file safety policy](docs/local-file-safety.md) for every new attachment entry point.
+- Run `npm run build`, `npm run lint-check`, and `npm test` on Node 22 and 24. Run `npm run format` when formatting needs correction.
+- Keep dependency changes separate and conservative.
 
-Create a new branch based on the issue you’re working on:
+## Pull requests
 
-```bash
-git checkout -b fix-bug-123  # For bug fixes
-git checkout -b feature-new-command  # For new features
-```
+Open pull requests against `rugbedbugg/Instagram-CLI:main`. Explain the problem, resulting behavior, and verification; reference a related issue when available. Include a mock-based screenshot for visual changes when useful.
 
-### 4. Make Your Changes
-
-Setup the development environment as per the instructions in [DEVELOPMENT.md](./DEVELOPMENT.md). More guidelines for contributing code are included there as well.
-
-Test your changes before submitting. _For UI changes, provide screenshots or GIFs._
-
-> [!TIP]
-> During development, we recommend using a secondary Instagram account if you are making a lot of API calls to avoid appearing suspicious to Instagram. Alternatively, use our mock data for UI changes.
-
-### 5. Submit a Pull Request (PR)
-
-Once you're done with your changes:
-
-0. Update with latest main branch: `git fetch upstream && git rebase upstream/main`
-1. Push your branch to your forked repository: `git push origin feature-new-command`
-2. Open a Pull Request (PR) against the `main` branch of this repository.
-3. In your PR description, mention the issue number it resolves (e.g., `Closes #123`).
-4. Wait for review and respond to any feedback.
-
-### 6. Code Review & Merging
-
-- Your PR will be reviewed, and maintainers may request changes.
-
-### 7. Releases and Versioning
-
-You don't need to worry about changing version numbers; maintainers will handle that during the release process.
-
-Releases are created manually through GitHub's release page. We use different tag conventions for each client:
-
-- **Python Client**: Use `v1.4.2`, `v1.5.0`, etc.
-- **TypeScript Client**: Use `ts-v1.0.0`, `ts-v1.1.0-beta`, etc.
-
-**Semantic Versioning:**
-
-- Bug fixes increment the patch version (e.g., `1.0.1`)
-- New features increment the minor version (e.g., `1.1.0`)
-- Breaking changes increment the major version (e.g., `2.0.0`)
-
-## Code of Conduct
-
-Be respectful to others in the community. Follow GitHub’s [Community Guidelines](https://docs.github.com/en/site-policy/github-terms/github-community-guidelines).
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the same license as this project.
-
----
-
-Happy coding! 🚀 Thanks for contributing!
+Use signed commits with a subject such as `[Fix]: Handle empty chat lists` and exactly one body line describing the change. Keep history reviewable; do not rewrite existing commits without explicit agreement. Preserve original authorship and MIT attribution.

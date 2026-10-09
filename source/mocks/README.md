@@ -1,57 +1,26 @@
-# Mock System for Instagram CLI
+# Mock System for Instagram-CLI
 
-This directory contains a clean, organized mock system for testing and development without making real API calls.
+The mock client supports UI development without Instagram credentials or requests. Its output does not demonstrate live service compatibility.
 
-## Structure
+## Run a view
 
-```plaintext
-mocks/
-├── index.ts        # Main exports
-├── mockData.ts     # All mock data (users, messages, threads, posts)
-└── MockClient.ts   # Mock implementation of InstagramClient
-```
-
-## Usage
-
-### Development Testing
-
-Run the mock app:
+Build with mocks, then choose one view per invocation:
 
 ```bash
-npm run build
-npm run start:mock  # this will run cli.mock.js instead of cli.js
-npm run start:mock -- --feed  # to test the media feed view
-npm run start:mock -- --story  # to test the story view
+npm run dev
+npm run start:mock -- --chat
+npm run start:mock -- --feed
+npm run start:mock -- --story
 ```
 
-### Manual View Testing
+`npm run build` creates production output and excludes mocks. Use `npm run dev:watch` to rebuild while editing, and restart the mock command to see changes.
 
-Edit `app.mock.tsx` to switch between different views:
+## Files
 
-```typescript
-const MOCK_CONFIG = {
-	view: 'chat' as 'chat' | 'media', // Change this line
-};
-```
+- `mock-data.ts`: users, threads, messages, feeds, and stories.
+- `mock-client.ts`: the mock client implementing the UI-facing methods.
+- `use-instagram-client.mock.ts`: the mock client hook.
+- `app.mock.tsx` and `cli.mock.ts`: view selection and the mock entry point.
+- `index.ts`: shared exports.
 
-Available views:
-
-- `"chat"` - Test the chat interface
-- `"media"` - Test the media feed interface
-
-### Adding Mock Data
-
-1. **More threads**: Edit `mockThreads` in `mockData.ts`
-2. **More messages**: Edit `mockMessages` in `mockData.ts`
-3. **More posts**: Edit `mockPosts` in `mockData.ts`
-4. **Generate data**: Use helper functions like `generateThread()` and `generateMessage()`
-
-### Future Testing Integration
-
-The mock client can be easily imported for unit tests:
-
-```typescript
-import {mockClient} from './mocks/index.js';
-
-// Use mockClient in your tests
-```
+Update relevant fixtures when UI expectations change. Tests in `tests/` render mock views with `ink-testing-library` and assert on `lastFrame()`. The AVA setup isolates state through `INSTAGRAM_CLI_HOME`; no real account is needed.

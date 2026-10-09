@@ -1,8 +1,10 @@
 # Login Workflow Design
 
+> Implementation reference: live authentication compatibility is currently being repaired and has not been revalidated against the current private API.
+
 ## Overview
 
-The Instagram CLI implements a multi-stage login flow that handles various authentication scenarios including session-based login, username/password authentication, 2FA, and challenge-based verification. Login flow is a bit of back-and-forth between the CLI UI component (`login.tsx`) and the `InstagramClient` methods.
+The Instagram-CLI implements a multi-stage login flow that handles various authentication scenarios including session-based login, username/password authentication, 2FA, and challenge-based verification. Login flow is a bit of back-and-forth between the CLI UI component (`login.tsx`) and the `InstagramClient` methods.
 
 ## Login Flow States
 

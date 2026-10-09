@@ -2,7 +2,7 @@
 
 ## Overview
 
-All errors, warnings, and important messages in the Instagram CLI are logged to files instead of being written to console. This is necessary because the CLI controls stdout/stdin for the terminal UI.
+All errors, warnings, and important messages in the Instagram-CLI are logged to files instead of being written to console. This is necessary because the CLI controls stdout/stdin for the terminal UI.
 
 The logging system also **automatically captures all API network requests** made by the `instagram-private-api` library by integrating with the `debug` library, providing comprehensive visibility into both application logic and Instagram API interactions.
 
@@ -59,19 +59,19 @@ The logging system automatically integrates with the `debug` library used by `in
 To enable only specific debug namespaces:
 
 ```bash
-DEBUG=ig:http instagram-cli chat
+DEBUG=ig:http insta-cli chat
 ```
 
 To disable API logging entirely:
 
 ```bash
-DEBUG= instagram-cli chat
+DEBUG= insta-cli chat
 ```
 
 To enable all debug output including other libraries:
 
 ```bash
-DEBUG=* instagram-cli chat
+DEBUG=* insta-cli chat
 ```
 
 **Note**: By default, if `DEBUG` is not set, the logger enables `ig:*` automatically to provide comprehensive API logging.
