@@ -1,6 +1,6 @@
 # UPSTREAM-ONLY: publishes the legacy Python client to PyPI from upstream's pypi-release environment.
-# Kept for reference in the maintenance fork. The repository guard below makes the job skip
-# in any other repository, so v*.*.* tags in the fork cannot trigger a PyPI publish.
+# Kept as upstream release history in the maintained downstream. The repository guard below makes the job skip
+# in any other repository, so v*.*.* tags in the downstream cannot trigger a PyPI publish.
 name: Build and Publish Python Package
 
 on:

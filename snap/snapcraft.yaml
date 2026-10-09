@@ -1,3 +1,6 @@
+# LEGACY UPSTREAM RECIPE: installs upstream 1.4.0, not this maintained implementation.
+# The package names, Node 20 runtime and upstream URLs below describe that artifact.
+# No downstream Snap is built or published; use the source install in ../README.md.
 name: instagram-cli
 base: core22
 version: '1.4.0'

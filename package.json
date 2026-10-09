@@ -1,11 +1,16 @@
 {
-	"name": "@i7m/instagram-cli",
-	"description": "The unofficial CLI and terminal client for Instagram",
+	"name": "insta-cli",
+	"description": "Instagram-CLI: a maintained terminal client for Instagram with keyboard-driven messaging and hardened local-file handling",
 	"version": "2.0.1",
 	"private": true,
 	"license": "MIT",
 	"repository": {
-		"url": "git+https://github.com/supreme-gg-gg/instagram-cli.git"
+		"type": "git",
+		"url": "git+https://github.com/rugbedbugg/Instagram-CLI.git"
+	},
+	"homepage": "https://github.com/rugbedbugg/Instagram-CLI#readme",
+	"bugs": {
+		"url": "https://github.com/rugbedbugg/Instagram-CLI/issues"
 	},
 	"keywords": [
 		"instagram",
@@ -19,10 +24,10 @@
 		"instagram-api",
 		"command-line",
 		"messenger",
-		"terminal-ui",
-		"brainrot"
+		"terminal-ui"
 	],
 	"bin": {
+		"insta-cli": "dist/cli.js",
 		"instagram-cli": "dist/cli.js"
 	},
 	"type": "module",

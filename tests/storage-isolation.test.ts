@@ -41,6 +41,14 @@ test('resolveDataDir: defaults to ~/.instagram-cli without an override', t => {
 	t.is(resolveDataDir({}), realDataDir);
 });
 
+test('the established INSTAGRAM_CLI_HOME override remains supported', t => {
+	t.is(DATA_DIR_ENV_VAR, 'INSTAGRAM_CLI_HOME');
+	t.is(
+		resolveDataDir({INSTAGRAM_CLI_HOME: 'existing-state'}),
+		path.resolve('existing-state'),
+	);
+});
+
 test('resolveDataDir: blank override falls back to the default', t => {
 	t.is(resolveDataDir({[DATA_DIR_ENV_VAR]: '   '}), realDataDir);
 });

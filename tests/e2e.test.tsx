@@ -28,6 +28,7 @@ test('unknown command shows helpful error', (t: ExecutionContext) => {
 	t.true(output.includes('Unknown command'));
 	t.true(output.includes('asdfljk'));
 	t.true(output.includes('--help'));
+	t.true(output.includes('insta-cli --help'));
 	unmount();
 });
 
@@ -41,9 +42,10 @@ test('version command renders all version info', async (t: ExecutionContext) => 
 	);
 	t.regex(
 		output ?? '',
-		/instagram-cli: v\d+\.\d+\.\d+/,
-		'Should display instagram-cli with a valid version number',
+		/Instagram-CLI \(insta-cli\): v\d+\.\d+\.\d+/,
+		'Should display the downstream project and package with a valid version',
 	);
+	t.false(output.includes('@i7m/instagram-cli'));
 	t.regex(
 		output ?? '',
 		/instagram-private-api: v\d+\.\d+\.\d+ \(patched\)/,

@@ -1,3 +1,5 @@
+# Legacy upstream Python package metadata; not the maintained TypeScript package.
+# Historical name, authors and homepage are preserved. See ../README.md.
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"

@@ -8,6 +8,7 @@ import {APP_VERSION} from 'instagram-private-api/dist/core/constants.js';
 export const description = 'Show version information';
 
 type VersionInfo = {
+	packageName: string;
 	cliVersion: string;
 	apiVersion: string;
 	appVersion: string;
@@ -29,6 +30,7 @@ export default function Version() {
 			});
 
 			setVersionInfo({
+				packageName: cliPkg?.packageJson.name ?? 'unknown',
 				cliVersion: cliPkg?.packageJson.version ?? 'unknown',
 				apiVersion: apiPkg?.packageJson.version ?? 'unknown',
 				appVersion: APP_VERSION,
@@ -42,7 +44,9 @@ export default function Version() {
 
 	return (
 		<Box flexDirection="column">
-			<Text>instagram-cli: v{versionInfo.cliVersion}</Text>
+			<Text>
+				Instagram-CLI ({versionInfo.packageName}): v{versionInfo.cliVersion}
+			</Text>
 			<Text>Using:</Text>
 			<Box flexDirection="column" marginLeft={2}>
 				<Text>instagram-private-api: v{versionInfo.apiVersion} (patched)</Text>

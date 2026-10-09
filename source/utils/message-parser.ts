@@ -394,7 +394,7 @@ export function parseMessageItem(
 			return {
 				...baseMessage,
 				itemType: 'placeholder',
-				text: `[Instagram CLI successfully blocked a brainrot]`,
+				text: `[Instagram-CLI: media type not displayed]`,
 			};
 		}
 
@@ -416,7 +416,7 @@ export function parseMessageItem(
 				return {
 					...baseMessage,
 					itemType: 'placeholder',
-					text: `[Instagram CLI successfully blocked a brainrot]`,
+					text: `[Instagram-CLI: media type not displayed]`,
 				};
 			}
 

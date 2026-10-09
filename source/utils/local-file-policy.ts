@@ -93,7 +93,7 @@ const categoryLabels: Record<SensitiveCategory, string> = {
 	'package-credentials': 'package registry credentials',
 	netrc: 'netrc credentials',
 	'environment-file': 'environment file',
-	'instagram-cli-data': 'Instagram CLI sessions, config or logs',
+	'instagram-cli-data': 'Instagram-CLI sessions, config or logs',
 	'browser-profile': 'browser profile or saved logins',
 	'password-store': 'password store or keyring',
 	'private-key': 'private key or certificate',

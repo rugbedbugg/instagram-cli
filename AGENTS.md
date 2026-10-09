@@ -4,7 +4,7 @@ This documentation provides context for AI coding tools like VSCode, Cursor, Gem
 
 ## Project Overview
 
-- Instagram CLI implemented in TypeScript with Pastel (CLI scaffolding), Ink (React TUI), and Instagram Private API + MQTT for backend interactions.
+- Instagram-CLI (`insta-cli`, with `instagram-cli` compatibility alias) implemented in TypeScript with Pastel (CLI scaffolding), Ink (React TUI), and Instagram Private API + MQTT for backend interactions.
 - Primary work happens in `source/`, tests are contained in `tests/`.
 - Old Python version lives under `instagram-py/`, work on typescript client unless the user specifies otherwise.
 
